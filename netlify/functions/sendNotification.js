@@ -1,4 +1,4 @@
-const admin = require("firebase-admin");
+import admin from "firebase-admin";
 
 const serviceAccount = {
         type: process.env.FIREBASE_TYPE,
@@ -19,28 +19,44 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-async function sendNotification(message) {
-        try {
-                const tokensSnapshot = await db.collection("user_tokens").get();
-                const tokens = tokensSnapshot.docs.map((doc) => doc.data().token);
+export async function handler(event, context) {
+        if (event.httpMethod === "POST") {
+                try {
+                        const { message } = JSON.parse(event.body);
 
-                if (tokens.length === 0) {
-                        return { message: "Aucun token trouvé." };
+                        const tokensSnapshot = await db.collection("user_tokens").get();
+                        const tokens = tokensSnapshot.docs.map((doc) => doc.data().token);
+
+                        if (tokens.length === 0) {
+                                return {
+                                        statusCode: 404,
+                                        body: JSON.stringify({ message: "Aucun token trouvé." }),
+                                };
+                        }
+
+                        const payload = {
+                                notification: {
+                                        title: "Notification Title",
+                                        body: message,
+                                },
+                        };
+
+                        const response = await admin.messaging().sendToDevice(tokens, payload);
+                        return {
+                                statusCode: 200,
+                                body: JSON.stringify({ message: "Notifications envoyées avec succès", response }),
+                        };
+                } catch (error) {
+                        console.error("Erreur lors de l'envoi des notifications:", error);
+                        return {
+                                statusCode: 500,
+                                body: JSON.stringify({ error: "Erreur lors de l'envoi des notifications" }),
+                        };
                 }
-
-                const payload = {
-                        notification: {
-                                title: "Notification Title",
-                                body: message,
-                        },
+        } else {
+                return {
+                        statusCode: 405,
+                        body: JSON.stringify({ error: "Méthode HTTP non autorisée" }),
                 };
-
-                const response = await admin.messaging().sendToDevice(tokens, payload);
-                return { message: "Notifications envoyées avec succès", response };
-        } catch (error) {
-                console.error("Erreur lors de l'envoi des notifications:", error);
-                throw new Error("Erreur lors de l'envoi des notifications");
         }
 }
-
-module.exports = { sendNotification };
