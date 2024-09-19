@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 import admin from "firebase-admin";
 
 const serviceAccount = {
