@@ -1,5 +1,5 @@
 const express = require("express");
-const sendNotification = require("./netlify/functions/sendNotification");
+const sendNotification = require("./sendNotification.js");
 
 const app = express();
 const port = 3000;
