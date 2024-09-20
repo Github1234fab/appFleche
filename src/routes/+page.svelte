@@ -9,6 +9,9 @@
 
     // Fonction pour gérer l'installation du nouveau service worker
     const handleUpdate = (installingWorker) => {
+        initMessaging(); // Appelle la fonction pour initialiser le service de messagerie
+        initAnalytics(); // Initialise Firebase Analytics si nécessaire
+
         installingWorker.onstatechange = () => {
             if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
                 // Vérifier si l'utilisateur a déjà accepté la mise à jour
