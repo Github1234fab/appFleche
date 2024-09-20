@@ -1,4 +1,4 @@
-const CACHE_NAME = "flech-cache-v3";
+const CACHE_NAME = "flech-cache-v4";
 const urlsToCache = ["/", "/icon-192x192.png", "/icon-512x512.png", "/manifest.json"];
 
 // Installer le service worker et mettre en cache les fichiers nécessaires
@@ -10,6 +10,7 @@ self.addEventListener("install", (event) => {
                         return cache.addAll(urlsToCache);
                 })
         );
+        // Forcer l'activation du nouveau service worker immédiatement
         self.skipWaiting();
 });
 
@@ -21,12 +22,14 @@ self.addEventListener("activate", (event) => {
                         return Promise.all(
                                 cacheNames.map((cacheName) => {
                                         if (cacheName !== CACHE_NAME) {
+                                                console.log("Suppression de l'ancien cache :", cacheName);
                                                 return caches.delete(cacheName);
                                         }
                                 })
                         );
                 })
         );
+        // Forcer la prise en charge immédiate du nouveau service worker
         self.clients.claim();
 });
 
@@ -35,6 +38,7 @@ self.addEventListener("fetch", (event) => {
         if (event.request.method === "GET") {
                 event.respondWith(
                         caches.match(event.request).then((response) => {
+                                // Retourner la réponse du cache si disponible, sinon effectuer une requête réseau
                                 return (
                                         response ||
                                         fetch(event.request).then((fetchResponse) => {
@@ -47,4 +51,38 @@ self.addEventListener("fetch", (event) => {
                         })
                 );
         }
+});
+
+// Gérer les notifications push de Firebase Cloud Messaging (FCM)
+self.addEventListener("push", (event) => {
+        const data = event.data.json();
+        console.log("Push reçu : ", data);
+
+        const options = {
+                body: data.notification.body,
+                icon: "/icon-192x192.png",
+                badge: "/badge-icon.png",
+                data: {
+                        url: data.notification.click_action || "/",
+                },
+        };
+
+        event.waitUntil(self.registration.showNotification(data.notification.title, options));
+});
+
+// Gérer le clic sur une notification
+self.addEventListener("notificationclick", (event) => {
+        event.notification.close();
+        event.waitUntil(
+                clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+                        for (const client of clientList) {
+                                if (client.url === event.notification.data.url && "focus" in client) {
+                                        return client.focus();
+                                }
+                        }
+                        if (clients.openWindow) {
+                                return clients.openWindow(event.notification.data.url);
+                        }
+                })
+        );
 });

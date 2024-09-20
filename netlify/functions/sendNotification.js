@@ -1,6 +1,4 @@
-require("dotenv").config();
-
-import admin from "firebase-admin";
+const admin = require("firebase-admin");
 
 const serviceAccount = {
         type: process.env.FIREBASE_TYPE,
@@ -21,10 +19,11 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-export async function handler(event, context) {
+exports.handler = async function (event, context) {
         if (event.httpMethod === "POST") {
                 try {
                         const { message } = JSON.parse(event.body);
+                        console.log("Message reçu:", message);
 
                         const tokensSnapshot = await db.collection("user_tokens").get();
                         const tokens = tokensSnapshot.docs.map((doc) => doc.data().token);
@@ -43,7 +42,10 @@ export async function handler(event, context) {
                                 },
                         };
 
+                        console.log("Envoi des notifications aux tokens:", tokens);
                         const response = await admin.messaging().sendToDevice(tokens, payload);
+                        console.log("Réponse de l'envoi des notifications:", response);
+
                         return {
                                 statusCode: 200,
                                 body: JSON.stringify({ message: "Notifications envoyées avec succès", response }),
@@ -61,4 +63,4 @@ export async function handler(event, context) {
                         body: JSON.stringify({ error: "Méthode HTTP non autorisée" }),
                 };
         }
-}
+};
