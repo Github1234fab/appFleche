@@ -7,24 +7,31 @@
     import { initMessaging, initAnalytics } from "$lib/firebase";
     import { requestNotificationPermission } from "../lib/firebase.js";
 
+    // Fonction pour gérer l'installation du nouveau service worker
+    const handleUpdate = (installingWorker) => {
+        installingWorker.onstatechange = () => {
+            if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
+                // Vérifier si l'utilisateur a déjà accepté la mise à jour
+                const updateAccepted = localStorage.getItem('updateAccepted');
+
+                if (!updateAccepted) {
+                    const userConfirmed = confirm("Une nouvelle version est disponible. Voulez-vous l'utiliser ?");
+                    if (userConfirmed) {
+                        // Stocker l'acceptation dans localStorage
+                        localStorage.setItem('updateAccepted', 'true');
+                        // Envoyer un message au service worker pour le forcer à s'activer immédiatement
+                        installingWorker.postMessage({ action: "skipWaiting" });
+                        // Recharger la page une seule fois
+                        window.location.reload(true); // Ajout de 'true' pour forcer le rechargement sans cache
+                    }
+                }
+            }
+        };
+    };
+
     onMount(() => {
         // Exécuter uniquement côté client
         if ("serviceWorker" in navigator) {
-            // Fonction pour gérer l'installation du nouveau service worker
-            const handleUpdate = (installingWorker) => {
-                installingWorker.onstatechange = () => {
-                    if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
-                        const userConfirmed = confirm("Une nouvelle version est disponible. Voulez-vous l'utiliser ?");
-                        if (userConfirmed) {
-                            // Envoyer un message au service worker pour le forcer à s'activer immédiatement
-                            installingWorker.postMessage({ action: "skipWaiting" });
-                            // Recharger la page une seule fois
-                            window.location.reload(true); // Ajout de 'true' pour forcer le rechargement sans cache
-                        }
-                    }
-                };
-            };
-
             // Enregistrer le service worker pour FCM
             navigator.serviceWorker.register("/firebase-messaging-sw.js")
                 .then((fcmRegistration) => {
