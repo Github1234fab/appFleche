@@ -4,14 +4,14 @@
     import UpLoadJsonAdvertisement from "../components/UpLoadJsonAdvertisement.svelte";
     import "../routes/styles.css";
     import { onMount } from "svelte";
-    import { initMessaging, initAnalytics } from "$lib/firebase";
-    import { requestNotificationPermission } from "../lib/firebase.js";
+    // import { initMessaging, initAnalytics } from "$lib/firebase";
+    // import { requestNotificationPermission } from "../lib/firebase.js";
 
 
     onMount(() => {
         // Exécuter uniquement côté client
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/path/to/your/service-worker.js').then(registration => {
+    navigator.serviceWorker.register('/service-worker.js').then(registration => {
         registration.onupdatefound = () => {
             const installingWorker = registration.installing;
             installingWorker.onstatechange = () => {
