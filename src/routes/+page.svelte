@@ -31,43 +31,62 @@
             }
         };
     };
-
-    onMount(() => {
-        // Exécuter uniquement côté client
+        onMount(() => {
         if ("serviceWorker" in navigator) {
-            // Enregistrer le service worker pour FCM
-            navigator.serviceWorker.register("/firebase-messaging-sw.js")
-                .then((fcmRegistration) => {
-                    console.log("FCM Service Worker enregistré avec succès");
-
-                    fcmRegistration.onupdatefound = () => {
-                        const installingWorker = fcmRegistration.installing;
-                        if (installingWorker) {
-                            handleUpdate(installingWorker);
-                        }
-                    };
+            navigator.serviceWorker.register("/onesignal-service-worker.js")
+                .then(() => {
+                    console.log("OneSignal Service Worker enregistré avec succès");
+                    // Initialise OneSignal ici si nécessaire
+                    OneSignal.push(() => {
+                        OneSignal.init({
+                            appId: "YOUR_ONESIGNAL_APP_ID",
+                            // Autres options de configuration
+                        });
+                    });
                 })
-                .catch((err) => {
-                    console.error("FCM Service Worker enregistrement échoué", err);
-                });
-
-            // Enregistrer le service worker pour le cache et autres tâches
-            navigator.serviceWorker.register("/service-worker.js")
-                .then((cacheRegistration) => {
-                    console.log("Service Worker pour cache enregistré avec succès");
-
-                    cacheRegistration.onupdatefound = () => {
-                        const installingWorker = cacheRegistration.installing;
-                        if (installingWorker) {
-                            handleUpdate(installingWorker);
-                        }
-                    };
-                })
-                .catch((err) => {
-                    console.error("Service Worker pour cache enregistrement échoué", err);
+                .catch((error) => {
+                    console.error("Échec de l'enregistrement du service worker OneSignal", error);
                 });
         }
     });
+
+
+    // onMount(() => {
+    //     // Exécuter uniquement côté client
+    //     if ("serviceWorker" in navigator) {
+    //         // Enregistrer le service worker pour FCM
+    //         navigator.serviceWorker.register("/firebase-messaging-sw.js")
+    //             .then((fcmRegistration) => {
+    //                 console.log("FCM Service Worker enregistré avec succès");
+
+    //                 fcmRegistration.onupdatefound = () => {
+    //                     const installingWorker = fcmRegistration.installing;
+    //                     if (installingWorker) {
+    //                         handleUpdate(installingWorker);
+    //                     }
+    //                 };
+    //             })
+    //             .catch((err) => {
+    //                 console.error("FCM Service Worker enregistrement échoué", err);
+    //             });
+
+    //         // Enregistrer le service worker pour le cache et autres tâches
+    //         navigator.serviceWorker.register("/service-worker.js")
+    //             .then((cacheRegistration) => {
+    //                 console.log("Service Worker pour cache enregistré avec succès");
+
+    //                 cacheRegistration.onupdatefound = () => {
+    //                     const installingWorker = cacheRegistration.installing;
+    //                     if (installingWorker) {
+    //                         handleUpdate(installingWorker);
+    //                     }
+    //                 };
+    //             })
+    //             .catch((err) => {
+    //                 console.error("Service Worker pour cache enregistrement échoué", err);
+    //             });
+    //     }
+    // });
 </script>
 
 <main>
