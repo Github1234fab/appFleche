@@ -86,3 +86,10 @@ self.addEventListener("notificationclick", (event) => {
                 })
         );
 });
+
+// Gérer les messages pour forcer l'activation immédiate du nouveau service worker
+self.addEventListener("message", (event) => {
+        if (event.data.action === "skipWaiting") {
+                self.skipWaiting();
+        }
+});
