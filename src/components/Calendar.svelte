@@ -93,6 +93,7 @@
         }
 </script>
 
+
 <div class="wrapper-month-display">
         <p class="currentMonth">
                 {$currentDate.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
