@@ -8,70 +8,55 @@
     import { requestNotificationPermission } from "../lib/firebase.js";
 
 
-    onMount(async () => {
-        // Initialiser Firebase Analytics et Messaging
-        initAnalytics();
-        initMessaging();
-
-        const deviceToken = await requestNotificationPermission();
-        if (deviceToken) {
-            console.log("Token de l'appareil:", deviceToken);
-            await sendNotification(deviceToken);
-        }
-
- if ("serviceWorker" in navigator) {
-    // Enregistrer le service worker pour FCM
-    const fcmRegistration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-    console.log("FCM Service Worker enregistré avec succès");
-
-    // Gestion des mises à jour pour FCM Service Worker
-    fcmRegistration.onupdatefound = () => {
-        const installingWorker = fcmRegistration.installing;
+    if ("serviceWorker" in navigator) {
+    // Fonction pour gérer l'installation du nouveau service worker
+    const handleUpdate = (installingWorker) => {
         installingWorker.onstatechange = () => {
             if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
-                // Nouvelle version disponible pour le service worker FCM
                 const userConfirmed = confirm("Une nouvelle version est disponible. Voulez-vous l'utiliser ?");
                 if (userConfirmed) {
-                    // Envoyer un message au service worker pour activer la nouvelle version
-                    if (fcmRegistration.waiting) {
-                        fcmRegistration.waiting.postMessage({ action: "skipWaiting" });
-                    }
-                    // Recharger la page pour utiliser la nouvelle version
-                    window.location.reload();
+                    // Envoyer un message au service worker pour le forcer à s'activer immédiatement
+                    installingWorker.postMessage({ action: "skipWaiting" });
+                    // Recharger la page une seule fois
+                    window.location.reload(true); // Ajout de 'true' pour forcer le rechargement sans cache
                 }
             }
         };
     };
+
+    // Enregistrer le service worker pour FCM
+    navigator.serviceWorker.register("/firebase-messaging-sw.js")
+        .then((fcmRegistration) => {
+            console.log("FCM Service Worker enregistré avec succès");
+
+            fcmRegistration.onupdatefound = () => {
+                const installingWorker = fcmRegistration.installing;
+                if (installingWorker) {
+                    handleUpdate(installingWorker);
+                }
+            };
+        })
+        .catch((err) => {
+            console.error("FCM Service Worker enregistrement échoué", err);
+        });
 
     // Enregistrer le service worker pour le cache et autres tâches
-    const cacheRegistration = await navigator.serviceWorker.register("/service-worker.js");
-    console.log("Service Worker pour cache enregistré avec succès");
+    navigator.serviceWorker.register("/service-worker.js")
+        .then((cacheRegistration) => {
+            console.log("Service Worker pour cache enregistré avec succès");
 
-    // Gestion des mises à jour pour Cache Service Worker
-    cacheRegistration.onupdatefound = () => {
-        const installingWorker = cacheRegistration.installing;
-        installingWorker.onstatechange = () => {
-            if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
-                // Nouvelle version disponible pour le service worker de cache
-                const userConfirmed = confirm("Une nouvelle version pour le cache est disponible. Voulez-vous l'utiliser ?");
-                if (userConfirmed) {
-                    // Envoyer un message au service worker pour activer la nouvelle version
-                    if (cacheRegistration.waiting) {
-                        cacheRegistration.waiting.postMessage({ action: "skipWaiting" });
-                    }
-                    // Recharger la page pour utiliser la nouvelle version
-                    window.location.reload();
+            cacheRegistration.onupdatefound = () => {
+                const installingWorker = cacheRegistration.installing;
+                if (installingWorker) {
+                    handleUpdate(installingWorker);
                 }
-            }
-        };
-    };
-
-    // Gestion du changement de contrôleur pour forcer le rechargement lors de l'activation d'un nouveau SW
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
-    });
+            };
+        })
+        .catch((err) => {
+            console.error("Service Worker pour cache enregistrement échoué", err);
+        });
 }
-    });
+
 </script>
 
 <main>
