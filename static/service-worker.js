@@ -53,22 +53,22 @@ self.addEventListener("fetch", (event) => {
         }
 });
 
-// Gérer les notifications push de Firebase Cloud Messaging (FCM)
-self.addEventListener("push", (event) => {
-        const data = event.data.json();
-        console.log("Push reçu : ", data);
+// // Gérer les notifications push de Firebase Cloud Messaging (FCM)
+// self.addEventListener("push", (event) => {
+//         const data = event.data.json();
+//         console.log("Push reçu : ", data);
 
-        const options = {
-                body: data.notification.body,
-                icon: "/icon-192x192.png",
-                badge: "/badge-icon.png",
-                data: {
-                        url: data.notification.click_action || "/",
-                },
-        };
+//         const options = {
+//                 body: data.notification.body,
+//                 icon: "/icon-192x192.png",
+//                 badge: "/badge-icon.png",
+//                 data: {
+//                         url: data.notification.click_action || "/",
+//                 },
+//         };
 
-        event.waitUntil(self.registration.showNotification(data.notification.title, options));
-});
+//         event.waitUntil(self.registration.showNotification(data.notification.title, options));
+// });
 
 // Gérer le clic sur une notification
 self.addEventListener("notificationclick", (event) => {
